@@ -123,7 +123,7 @@ $ make menuconfig
 
 之后使用 `make flash` 和 `make monitor` 均正常
 
-####** ESP8266 启动时 rst cause
+#### ** ESP8266 启动时 rst cause
 
 在 ESP8266 启动时, `ROM CODE` 会读取 `GPIO` 状态和 `rst cause` 状态, 进而决定 ESP8266 工作模式.
 
