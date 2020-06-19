@@ -274,11 +274,31 @@ void app_main(void)
 
 ###6. GPIO API
 
-* 头文件：`esp266/include/driver/gpio.h`
+#### i.头文件：`esp266/include/driver/gpio.h`
 
-* 函数说明：
+#### ii.函数概览：
 
+```C
+esp_err_t gpio_config(const gpio_config_t *gpio_cfg);
+esp_err_t gpio_set_intr_type(gpio_num_t gpio_num, gpio_int_type_t intr_type);
+esp_err_t gpio_set_level(gpio_num_t gpio_num, uint32_t level);
+int gpio_get_level(gpio_num_t gpio_num);
+esp_err_t gpio_set_direction(gpio_num_t gpio_num, gpio_mode_t mode);
+esp_err_t gpio_set_pull_mode(gpio_num_t gpio_num, gpio_pull_mode_t pull);
+esp_err_t gpio_wakeup_enable(gpio_num_t gpio_num, gpio_int_type_t intr_type);
+esp_err_t gpio_wakeup_disable(gpio_num_t gpio_num);
+esp_err_t gpio_isr_register(void (*fn))void *, void *arg, int no_use, gpio_isr_handle_t *handle_no_use);
+esp_err_t gpio_pullup_en(gpio_num_t gpio_num);
+esp_err_t gpio_pullup_dis(gpio_num_t gpio_num);
+esp_err_t gpio_pulldown_en(gpio_num_t gpio_num);
+esp_err_t gpio_pulldown_dis(gpio_num_t gpio_num);
+esp_err_t gpio_install_isr_service(int no_use);
+void gpio_uninstall_isr_service(void);
+esp_err_t gpio_isr_handler_add(gpio_num_t gpio_num, gpio_isr_t isr_handler, void *args);
+esp_err_t gpio_isr_handler_remove(gpio_num_t gpio_num);
+```
 
+#### iii.函数说明：
 
 ```C
 esp_err_t gpio_config(const gpio_config_t *gpio_cfg)
@@ -408,7 +428,7 @@ esp_err_t gpio_wakeup_disable(gpio_num_t gpio_num)
 
 
 ```C
-esp_err_t gpio_isr_register(void (*fn))void *, void *arg, int no_use, gpio_isr_handle_t *handle_no_use）
+esp_err_t gpio_isr_register(void (*fn))void *, void *arg, int no_use, gpio_isr_handle_t *handle_no_use)
 ```
 注册 `GPIO` 中断处理函数，即 `ISR`。中断发生时，`ISR` 处理函数总是会被调用。参考 `gpio_install_isr_service()` 和 `gpio_isr_handler_add()`，使用驱动库支持 `GPIO` 中断服务。
 
@@ -700,8 +720,19 @@ enum gpio_pulldown_t
 
 ### 7. 日志 API（部分）
 
-* 头文件：log/include/esp_log.h
-* 函数说明：
+#### i.头文件：`log/include/esp_log.h`
+
+#### ii.函数概览
+
+```C
+putchar_like_t esp_log_set_putchar(putchar_like_t func)
+uint32_t esp_log_timestamp(void)
+uint32_t esp_log_early_timestamp(void)
+void esp_log_write(esp_log_level_t level, const char *tag, const char *format, ...)
+void esp_early_log_write(esp_log_level_t level, const char *tag, const char *format, ...)
+```
+
+#### iii.函数说明：
 
 
 ```C
