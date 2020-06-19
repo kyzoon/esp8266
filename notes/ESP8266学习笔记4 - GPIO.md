@@ -726,4 +726,5 @@ ESP_LOGD(tag, format, ...)
 // Log Verbose level
 ESP_LOGV(tag, format, ...)
 ```
+说明：宏中已经添加行尾结束符，所以实际使用时，可以不用加
 
