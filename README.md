@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ###1. 目录结构说明
 
 * doc - 官方等参考文件
@@ -22,3 +23,7 @@
 $ source chenv.sh
 ```
 
+=======
+# esp8266
+Note about ESP8266
+>>>>>>> cbab7f3a7ad9144317f668b9fac55dd68055e9ca
