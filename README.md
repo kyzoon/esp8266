@@ -1,4 +1,5 @@
-<<<<<<< HEAD
+# ESP8266 学习笔记
+
 ###1. 目录结构说明
 
 * doc - 官方等参考文件
@@ -11,8 +12,6 @@
 * ESP8266_RTOS_SDK-3.1.2
 * xtensa-lx106-elf
 
-
-
 ### 2. chenv.sh
 
 一个为了方便自已写的配置环境的脚本文件，方便快速配置好环境变量。即添加了 `PATH` 和 `IDF_PATH` 两个变量
@@ -23,7 +22,3 @@
 $ source chenv.sh
 ```
 
-=======
-# esp8266
-Note about ESP8266
->>>>>>> cbab7f3a7ad9144317f668b9fac55dd68055e9ca
