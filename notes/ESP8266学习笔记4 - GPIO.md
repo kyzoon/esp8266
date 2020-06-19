@@ -21,6 +21,7 @@
 * RTSO_SDK参考手册：docs-espressif-com-esp8266-rtos-sdk-en-latest.pdf
 * 技术参考手册：esp8266-technical_reference_cn.pdf
 * 硬件设计指南：esp8266_hardware_design_guidelines_cn.pdf
+* Datasheet：0a-esp8266ex_datasheet_cn.pdf
 
 ###2. GPIO 实例
 
