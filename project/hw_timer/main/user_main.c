@@ -7,6 +7,7 @@
 #include "esp_log.h"
 
 #include "driver/gpio.h"
+/* hw_timer 驱动 */
 #include "driver/hw_timer.h"
 
 static const char *TAG = "hw_timer_example";
