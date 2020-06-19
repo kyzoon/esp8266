@@ -40,7 +40,7 @@
   * 改变 GPIO15/16 输出电平，触发中断
   * ISR处理，消息插入队列
 
-####ii. 主程序分析
+#### ii. 主程序分析
 
 ```C
 /* main/user_main.c */
@@ -170,7 +170,7 @@ void app_main(void)
 }
 ```
 
-####iii. 打印输出
+#### iii. 打印输出
 
 ```shell
 I (368) gpio: GPIO[15]| InputEn: 0| OutputEn: 1| OpenDrain: 0| Pullup: 0| Pulldown: 0| Intr:0	# GPIO15 输出
@@ -239,7 +239,7 @@ void app_main(void)
 }
 ```
 
-###4. GPIO API
+### 4. GPIO API
 
 #### i.头文件：`esp266/include/driver/gpio.h`
 
