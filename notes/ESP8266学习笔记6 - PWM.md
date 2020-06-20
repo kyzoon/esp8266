@@ -1,6 +1,8 @@
 
 
 ## ESP8266 学习笔记 6 —— PWM 实例
+作者：Preston_zhu<br>
+日期：2020.6.21
 
 ### 0. PWM 硬件描述
 ESP8266 有 4 个PWM 输出接口/通道。如下表
@@ -258,9 +260,8 @@ esp_err_t pwm_deinit(void)
 ```C
 esp_err_t pwm_set_duty(uint8_t channel_num, uint32_t duty)
 ```
-Set the duty cycle of a PWM channel. Set the time that high level or low(if you invert the output of this channel)
-signal will last, the duty cycle cannot exceed the period.
-Note After set configuration, pwm_start needs to be called to take effect.
+设置 PWM 指定通道的占空比值。即设置高电平信号持续时长（或反转输出时低电平持续时长），占空比值不能超过周期值。
+注意：需要在配置 PWM 之后，调用 `pwm_start()` 函数，使设置生效
 
 返回值：
 
@@ -269,13 +270,13 @@ Note After set configuration, pwm_start needs to be called to take effect.
 
 参数：
 
-* channel_num: PWM channel number the channel_num cannot exceed the value initialized by pwm_init.
-* duty: duty cycle
+* `channel_num` - PWM 通道号，不能超过初始化时所设置的通道数
+* `duty` - duty cycle
 
 ```C
 esp_err_t pwm_get_duty(uint8_t channel_num, uint32_t *duty_p)
 ```
-Get the duty cycle of a PWM channel.
+获取 PWM 指定通道占空比值
 
 返回值：
 
@@ -284,15 +285,14 @@ Get the duty cycle of a PWM channel.
 
 参数：
 
-* channel_num: PWM channel number the channel_num cannot exceed the value initialized by
-pwm_init.
-* duty_p: pointer saves the address of the specified channel duty cycle
+* `channel_num` - PWM 通道号，不能超过初始化时所设置的通道数
+* `duty_p` - 指针，存储获取指定通道占空比值
 
 ```C
 esp_err_t pwm_set_period(uint32_t period)
 ```
-Set PWM period, unit: us.
-Note After set configuration, pwm_start needs to be called to take effect.
+设置 PWM 周期，单位 us
+注意：需要在配置 PWM 之后，调用 `pwm_start()` 函数，使设置生效
 
 返回值：
 
@@ -301,13 +301,12 @@ Note After set configuration, pwm_start needs to be called to take effect.
 
 参数：
 
-* period: PWM period, unit: us For example, for 1KHz PWM, period is 1000. Do not set the period
-below 20us.
+* `period`: PWM 周期，单位 us。例如： 1kHz PWM，周期为 1000us。周期不能小于 20us
 
 ```C
 esp_err_t pwm_get_period(uint32_t *period_p)
 ```
-Get PWM period, unit: us.
+获取 PWM 周期，单位 us
 
 返回值：
 
@@ -316,7 +315,7 @@ Get PWM period, unit: us.
 
 参数：
 
-* period_p: pointer saves the address of the period
+* `period_p` - 指针，存储获取的周期值
 
 ```C
 esp_err_t pwm_start(void)
@@ -347,8 +346,8 @@ esp_err_t pwm_stop(uint32_t stop_level_mask)
 ```C
 esp_err_t pwm_set_duties(uint32_t *duties)
 ```
-Set the duty cycle of all channels.
-Note After set configuration, pwm_start needs to be called to take effect.
+设置 PWM 所有通道的占空比
+注意：需要在配置 PWM 之后，调用 `pwm_start()` 函数，使设置生效
 
 返回值：
 
@@ -357,14 +356,13 @@ Note After set configuration, pwm_start needs to be called to take effect.
 
 参数：
 
-* duties: An array that store the duty cycle of each channel, the array elements number needs to be
-the same as the number of channels.
+* `duties` - 数组，存储各个通道的占空比值，数组元素值个数需要与所设置的通道数相等
 
 ```C
 esp_err_t pwm_set_phase(uint8_t channel_num, int16_t phase)
 ```
-Set the phase of a PWM channel.
-Note After set configuration, pwm_start needs to be called to take effect.
+设置 PWM 指定通道的相位
+注意：需要在配置 PWM 之后，调用 `pwm_start()` 函数，使设置生效
 
 返回值：
 
@@ -373,10 +371,8 @@ Note After set configuration, pwm_start needs to be called to take effect.
 
 参数：
 
-* channel_num: PWM channel number the channel_num cannot exceed the value initialized by
-pwm_init.
-* phase: The phase of this PWM channel, the phase range is (-180 ~ 180).
-相位值范围：(-180, 180)，不包含+/-180
+* `channel_num` - PWM 通道号，不能超过初始化时所设置的通道数
+* `phase` - PWM 指定通道的相位值，相位值范围：(-180, 180)，不包含+/-180
 
 ```C
 esp_err_t pwm_set_phases(int16_t *phases)
@@ -396,7 +392,7 @@ esp_err_t pwm_set_phases(int16_t *phases)
 ```C
 esp_err_t pwm_get_phase(uint8_t channel_num, uint16_t *phase_p)
 ```
-Get the phase of a PWM channel.
+获取 PWM 指定通道的相位值
 
 返回值：
 
@@ -405,15 +401,14 @@ Get the phase of a PWM channel.
 
 参数：
 
-* channel_num: PWM channel number the channel_num cannot exceed the value initialized by
-pwm_init.
-* phase_p: pointer saves the address of the specified channel phase
+* `channel_num` - PWM 通道号，不能超过初始化时所设置的通道数
+* `phase_p` - 指针，存储获取到的通道相位值
 
 ```C
 esp_err_t pwm_set_period_duties(uint32_t period, uint32_t *duties)
 ```
-Set PWM period and duty of each PWM channel.
-Note After set configuration, pwm_start needs to be called to take effect.
+设置 PWM 各通道的周期和占空比参数
+注意：需要在配置 PWM 之后，调用 `pwm_start()` 函数，使设置生效
 
 返回值：
 
@@ -422,9 +417,8 @@ Note After set configuration, pwm_start needs to be called to take effect.
 
 参数：
 
-* period: PWM period, unit: us For example, for 1KHz PWM, period is 1000.
-* duties: An array that store the duty cycle of each channel, the array elements number needs to be
-the same as the number of channels.
+* `period` - PWM 周期参数，单位 us。例如：1kHz PWM，周期为 1000us
+* `duties` - 数组，存储各个通道的占空比值，数组元素个数需要与所设置的通道数相等
 
 ```C
 esp_err_t pwm_set_channel_invert(uint16_t channel_mask)
@@ -445,9 +439,8 @@ esp_err_t pwm_set_channel_invert(uint16_t channel_mask)
 ```C
 esp_err_t pwm_clear_channel_invert(uint16_t channel_mask)
 ```
-Clear the inverting output PWM channel. This function only works for the PWM channel that is already in the
-inverted output states.
-Note After set configuration, pwm_start needs to be called to take effect.
+清除 PWM 通道反转输出设置。此函数只有当 PWM 通道已经设置为反转输出时才有效
+注意：需要在配置 PWM 之后，调用 `pwm_start()` 函数，使设置生效
 
 返回值：
 
@@ -456,9 +449,8 @@ Note After set configuration, pwm_start needs to be called to take effect.
 
 参数：
 
-* channel_mask: The channel bitmask that need to clear e.g. The outputs of channels 0, 1, 2 and 3
-are already in inverted state. If channel_mask = 0x07, the output of channel 0, 1, and 2 will return to
-normal, the channel 3 will keep inverting output
+* `channel_mask` - 通道位掩码，设置为需要清除的通道
+  * 例如：假设初始化了 8 个通道，且通道 0，1，2，3 均已经设置为反转输出通道，如果 `channel_mask` = 0x07，则通道 0，1，2 会设置成正常输出，通道 3 则保持反转输出
 
 ### 4. 相位计算
 
@@ -483,17 +475,21 @@ normal, the channel 3 will keep inverting output
 这里有个疑问：
 
 相位计算取的半个周期： 50 度 / 180 度，然后使用了一个周期的时间 500us，计算的值与实际的值一致。为什么不是用半个周期的时间 250us 呢？
+猜想：应该是因为此方波没有负半轴的波形，相位只有 180 度
 
 ### 5. 其它实例测试
 #### i. 特殊相位差实例
 
 相位参数为 (0, 0, 90, -90) 
-
+![pwm4](images/pwm4.png)
+从图可知：
+通道 2 波形与通道 3 和 4 均差半个波形，因为相位相差 90 度
+通道 3 与 4 则波形相同，因为相位相关 180 度
 
 #### ii. 不同占空比实例
 
 占空比参数为 (100, 200, 300, 400)
-
+![pwm5](images/pwm5.png)
 
 #### iii. 下图为实例输出五个通道
 
@@ -501,6 +497,7 @@ normal, the channel 3 will keep inverting output
 * GPIO：12/13/14/15/16  
 * 占空比：(250, 250, 250, 250, 250)
 * 相位：(0, 0, 0, 0, 0)
-
+![pwm6](images/pwm6.png)
+成功验证了多于 4 个 PWM 通道输出
 
 
