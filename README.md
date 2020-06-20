@@ -22,3 +22,23 @@
 $ source chenv.sh
 ```
 
+### 3. 笔记清单
+* ESP8266学习笔记1 - ubuntu环境搭建
+* ESP8266学习笔记2 - hello_world实例
+* ESP8266学习笔记3 - 项目模板
+* ESP8266学习笔记4 - GPIO
+* ESP8266学习笔记5 - hw_timer
+* ESP8266学习笔记6 - PWM
+---
+未完成
+* ESP8266学习笔记7 - 呼吸灯实例
+* ESP8266学习笔记8 - AM2301温度传感器实例
+* ESP8266学习笔记n - I2C
+* ESP8266学习笔记n - DS3231实例
+* ESP8266学习笔记n - SPI
+* ESP8266学习笔记n - SD卡实例
+* ESP8266学习笔记n - UART
+* ESP8266学习笔记n - Wifi
+* ESP8266学习笔记n - UDP
+* ESP8266学习笔记n - TCP
+* ESP8266学习笔记n - MQTT
