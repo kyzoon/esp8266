@@ -171,9 +171,15 @@ I (7434) hw_timer_example: Initialize hw_timer for callback3
 I (7444) hw_timer_example: Set hw_timer timing time 1ms with one-shot
 ```
 
-图解如下所示：
+#### iv. 图解
+![hw_timer1](images/hw_timer1.png)
+![hw_timer2](images/hw_timer2.png)
 
+#### v. hw_timer 应用代码流程
+![hw_timer应用流程.png](images\hw_timer应用流程.png)
 
+##### vi. 疑问
+**好像只有一个硬件定时器，暂时没有看到资料说明？？**
 
 ### 3. API
 
@@ -204,7 +210,7 @@ esp_err_t hw_timer_disarm(void);
 ```C
 esp_err_t hw_timer_set_clkdiv(hw_timer_clkdiv_t clkdiv)
 ```
-Set the frequency division coefficient of hardware timer.
+设置硬件定时器分频系数
 
 返回值：
 
@@ -214,23 +220,23 @@ Set the frequency division coefficient of hardware timer.
 
 参数：
 
-* `clkdiv` - frequency division coefficient
+* `clkdiv` - 分频系数
 
 ```C
 uint32_t hw_timer_get_clkdiv()
 ```
-Get the frequency division coefficient of hardware timer.
+获取硬件定时器分频系数
 
 返回值：
 
-* `0` - `TIMER_CLKDIV_1`
-* `4` - `TIMER_CLKDIV_16`
-* `8` - `TIMER_CLKDIV_256`
+* `0` - `TIMER_CLKDIV_1` 1 分频/不分频
+* `4` - `TIMER_CLKDIV_16` 16 分频
+* `8` - `TIMER_CLKDIV_256` 256 分频
 
 ```C
 esp_err_t hw_timer_set_intr_type(hw_timer_intr_type_t intr_type)
 ```
-Set the interrupt type of hardware timer.
+设置硬件定时器中断触发类型
 
 返回值：
 
@@ -240,22 +246,22 @@ Set the interrupt type of hardware timer.
 
 参数：
 
-* `intr_type` - interrupt type
+* `intr_type` - 中断触发类型
 
 ```C
 uint32_t hw_timer_get_intr_type()
 ```
-Get the interrupt type of hardware timer.
+获取硬件定时器中断触发类型
 
 返回值：
 
-* `0` - `TIMER_EDGE_INT`
-* `1` - `TIMER_LEVEL_INT`
+* `0` - `TIMER_EDGE_INT` 边缘触发
+* `1` - `TIMER_LEVEL_INT` 电平触发
 
 ```C
 esp_err_t hw_timer_set_reload(bool reload)
 ```
-Enable hardware timer reload.
+使能硬件定时器重载模式
 
 返回值：
 
@@ -264,22 +270,22 @@ Enable hardware timer reload.
 
 参数：
 
-* `reload` - false, one-shot mode; true, reload mode
+* `reload` - `false`, 单次模式; `true`, 重载模式
 
 ```C
 bool hw_timer_get_reload()
 ```
-Get the hardware timer reload status.
+获取硬件定时器运行模式：重载模式 或 单次模式
 
 返回值：
 
-* `true` - reload mode
-* `false` - one-shot mode
+* `true` - 重载模式
+* `false` - 单次模式
 
 ```C
 esp_err_t hw_timer_enable(bool en)
 ```
-Enable hardware timer.
+使能硬件定时器
 
 返回值：
 
@@ -288,12 +294,12 @@ Enable hardware timer.
 
 参数：
 
-* `en` - false, hardware timer disable; true, hardware timer enable
+* `en` - `false`, 硬件定时器禁止; `true`, 硬件定时器使能
 
 ```C
 bool hw_timer_get_enable()
 ```
-Get the hardware timer enable status.
+获取硬件定时器使能状态
 
 返回值：
 
@@ -303,30 +309,30 @@ Get the hardware timer enable status.
 ```C
 esp_err_t hw_timer_set_load_data(uint32_t load_data)
 ```
-Set the hardware timer load value.
+设置硬件定时器装载初值
 
 返回值：
 
 * `ESP_OK` - 成功
-* `ESP_ERR_INVALID_ARG` *- 参数错误
+* `ESP_ERR_INVALID_ARG` - 参数错误
 * `ESP_FAIL` - 硬件定时器已经初始化
 
 参数：
 
-* `load_data` - hardware timer load value
-– FRC1 hardware timer, range : less than 0x1000000
+* `load_data` - 硬件定时器装载初值
+  * FRC1 硬件定时器，范围：小于 0x1000000
 
 ```C
 uint32_t hw_timer_get_load_data()
 ```
-Get the hardware timer load value.
-Return load value
+获取硬件定时器装载初值
+返回装载初值
 
 ```C
 uint32_t hw_timer_get_count_data()
 ```
-Get the hardware timer count value.
-Return count value
+获取硬件定时器当前计数值
+返回当前计数值
 
 ```C
 esp_err_t hw_timer_deinit(void)
@@ -383,7 +389,6 @@ esp_err_t hw_timer_disarm(void)
 
 * `ESP_OK` - 成功
 * `ESP_FAIL` - 硬件定时器未初始化
-
 
 ---
 
