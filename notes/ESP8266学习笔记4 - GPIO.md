@@ -216,14 +216,28 @@ I (7418) main: cnt: 7
 #### v. GPIO 应用代码流程
 ```mermaid
 graph TD
-	input1["gpio_config() : 初始化 GPIO"]
-	input1 --> input2["gpio_set_level() : 设置 GPIO 引脚输出电平"]
-	input1 --> input3["gpio_set_intr_type() : 设置 GPIO 引脚中断类型"]
+	id1("gpio_config() : 初始化 GPIO")
+	id1 --> input2["gpio_set_level() : 设置 GPIO 引脚输出电平"]
+	id1 --> input3["gpio_set_intr_type() : 设置 GPIO 引脚中断类型"]
 	input3 --> input4["gpio_install_isr_service() : 安装 GPIO 中断服务"]
 	input4 --> input5["gpio_isr_handler_add() : 注册 GPIO 中断服务程序"]
 ```
 
+```flow
+st=>start: Start
+op=>operation: Your Op
+cond=>condition: Yes or No?
+e=>end
+
+st->op->cond
+cond(yes)->e
+cond(no)->op
+```
+
+
+
 #### vi. 疑问
+
 **目前还有个疑问：为什么初始化的 GPIO 口为低电?**
 
 ### 3. 程序框架
