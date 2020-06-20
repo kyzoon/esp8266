@@ -1,6 +1,6 @@
-
-
 ## ESP8266 学习笔记 4 —— GPIO 实例
+作者：Preston_zhu<br>
+日期：2020.6.19
 
 之后实例均都基于 RTOS_SDK：
 

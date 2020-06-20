@@ -1,6 +1,6 @@
-
-
 ## ESP8266 学习笔记 5 —— hw_timer 实例
+作者：Preston_zhu<br>
+日期：2020.6.20
 
 ### 1. hw_timer 实例
 
