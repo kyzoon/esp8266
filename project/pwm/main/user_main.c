@@ -25,8 +25,8 @@
 #include "esp_system.h"
 #include "esp_err.h"
 
-/* pwm 驱动 */
 #include "driver/gpio.h"
+/* pwm 驱动 */
 #include "driver/pwm.h"
 
 // PWM 周期 500us(2Khz)
