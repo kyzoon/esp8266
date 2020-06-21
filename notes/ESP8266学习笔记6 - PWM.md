@@ -243,7 +243,7 @@ PWM 功能初始化，包括初始化 GPIO，频率和占空比
 * `period` - PWM 周期，单位 us。例如 1KHz PWM，周期 1000us。周期值不能低于 20us。
 * `duties` - 各个 PWM 通道的占空比。数组，元素个数与 PWM 通道配置个数对应
 * `channel_num` - PWM 通道号，最大值为 8
-* `pin_num` - PWM 通道对应 GPIO 引脚号, 为一个存储了 PWM 通道对应的 GPIO 引脚号
+* `pin_num` - PWM 通道对应 GPIO 引脚号, 为一个存储了 PWM 通道对应的 GPIO 引脚号的数组
 
 ```C
 esp_err_t pwm_deinit(void)
