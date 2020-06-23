@@ -3,11 +3,11 @@
  * 本实例展示如何使用 GPIO 控制和读取温湿度传感器 AM 2301
  *
  * GPIO 配置状态:
- * GPIO5: 输出
+ * GPIO4: 输出
  *
  * 测试:
  * 连接 GPIO4 至 AM2301 黄线 SDA
- * 控制 GPIO5 发送和接收指定时序的波形，转化为数据，然后处理成温度湿度值
+ * 控制 GPIO4 发送和接收指定时序的波形，转化为数据，然后处理成温度湿度值
  */
 
 #include <stdio.h>
@@ -79,7 +79,6 @@ static uint8_t am2301_read_bit(void)
 		return 0;
 	}
 }
-
 
 void app_main(void)
 {
