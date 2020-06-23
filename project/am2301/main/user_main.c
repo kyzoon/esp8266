@@ -1,17 +1,13 @@
 /**
  * 说明:
- * 本实例展示如何配置 GPIO 以及如何使用 GPIO 中断
+ * 本实例展示如何使用 GPIO 控制和读取温湿度传感器 AM 2301
  *
  * GPIO 配置状态:
- * GPIO15: 输出
- * GPIO16: 输出
- * GPIO4:  输入，上拉，上升及下降沿触发中断
- * GPIO5:  输入，上拉，上升沿触发中断
+ * GPIO5: 输出
  *
  * 测试:
- * 连接 GPIO15 至 GPIO4
- * 连接 GPIO16 至 GPIO5
- * 在 GPIO15/16 两个 IO 口产生脉冲, 由此来触发 GPIO4/5 中断
+ * 连接 GPIO4 至 AM2301 黄线 SDA
+ * 控制 GPIO5 发送和接收指定时序的波形，转化为数据，然后处理成温度湿度值
  */
 
 #include <stdio.h>
@@ -31,39 +27,11 @@
 /* ESP 头文件 */
 #include "esp_system.h"
 
+#define AM2301_CTRL_PIN		(GPIO_NUM_4)
+
 static const char *s_tag = "AS2301";
 
-static void as2301_read(void)
-{
-	for(;;)
-	{
-		gpio_set_level(GPIO_NUM_5, 0);
-		vTaskDelay(1 / portTICK_RATE_MS);
-		gpio_set_level(GPIO_NUM_5, 1);
-		vTaskDelay(1 / portTICK_RATE_MS);
-	}
-}
-
-void gpio_set_input_mode(void)
-{
-	gpio_config_t io_conf;
-	
-	// 设置 GPIO15/16 为输出模式
-	// 禁止中断
-	io_conf.intr_type = GPIO_INTR_DISABLE;
-	// 设置为输出模式
-	io_conf.mode = GPIO_MODE_INPUT;
-	// 位掩码选择 GPIO15/16，置1
-	io_conf.pin_bit_mask = GPIO_Pin_5;
-	// 禁止下拉
-	io_conf.pull_down_en = 0;
-	// 禁止上拉
-	io_conf.pull_up_en = 0;
-
-	gpio_config(&io_conf);
-}
-
-void gpio_set_output_mode(void)
+static void gpio_init(void)
 {
 	gpio_config_t io_conf;
 	
@@ -73,7 +41,7 @@ void gpio_set_output_mode(void)
 	// 设置为输出模式
 	io_conf.mode = GPIO_MODE_OUTPUT;
 	// 位掩码选择 GPIO15/16，置1
-	io_conf.pin_bit_mask = GPIO_Pin_5;
+	io_conf.pin_bit_mask = GPIO_Pin_4;
 	// 禁止下拉
 	io_conf.pull_down_en = 0;
 	// 禁止上拉
@@ -81,31 +49,28 @@ void gpio_set_output_mode(void)
 
 	gpio_config(&io_conf);
 
-    gpio_set_level(GPIO_NUM_5, 1);
+    gpio_set_level(AM2301_CTRL_PIN, 1);
 }
-static int atry[40] = { 0 };
-static int btry[40] = { 0 };
-#if 0
-uint8_t am2301_get_bit(void)
-{
-	// int retry = 0;
-	atry = 0;
-	btry = 0;
+
+static uint8_t am2301_read_bit(void)
+{ 
+	int retry = 0;
 
 	// 等待低电平
-	while(gpio_get_level(GPIO_NUM_5) && atry < 100)
+	while(1 == gpio_get_level(AM2301_CTRL_PIN) && retry < 200)
 	{
-		++atry;
+		++retry;
 		os_delay_us(1);
 	}
 	// 等待高电平
-	while(!gpio_get_level(GPIO_NUM_5) && btry < 100)
+	while(0 == gpio_get_level(AM2301_CTRL_PIN) && retry < 200)
 	{
-		++btry;
+		++retry;
 		os_delay_us(1);
 	}
-	os_delay_us(40);	// 等待 40us
-	if(gpio_get_level(GPIO_NUM_5))
+	os_delay_us(35);	// 等待 35us
+
+	if(1 == gpio_get_level(AM2301_CTRL_PIN))
 	{
 		return 1;
 	}
@@ -114,133 +79,98 @@ uint8_t am2301_get_bit(void)
 		return 0;
 	}
 }
-#endif
 
-static uint8_t t[5000] = {0};
+
 void app_main(void)
 {
-	gpio_config_t io_conf;
-	
-	// 设置 GPIO15/16 为输出模式
-	// 禁止中断
-	io_conf.intr_type = GPIO_INTR_DISABLE;
-	// 设置为输出模式
-	io_conf.mode = GPIO_MODE_OUTPUT;
-	// 位掩码选择 GPIO15/16，置1
-	io_conf.pin_bit_mask = GPIO_Pin_5;
-	// 禁止下拉
-	io_conf.pull_down_en = 0;
-	// 禁止上拉
-	io_conf.pull_up_en = 0;
-
-	gpio_config(&io_conf);
-
-    gpio_set_level(GPIO_NUM_5, 1);
-
 	int i = 0;
-	uint64_t data = 0;
-	uint8_t bit = 0;
-	uint8_t last_bit = 0;
-	int pos = 0;
-	uint8_t retry[120] = {0};
+	int j = 0;
+	uint8_t recv_byte[5] = {0};
+	int retry = 0;
+	int hum = 0;
+	int temp = 0;
+	uint8_t minus_temp_flag = ' ';
+
+	gpio_init();
 
 	for(;;)
 	{
         // 每分钟读取 1 次温湿度
 		vTaskDelay(5 * 1000 / portTICK_RATE_MS);
-		data = 0;
-		memset(atry, 0, 40);
-		memset(btry, 0, 40);
+		minus_temp_flag = ' ';
+		memset(recv_byte, 0, 5);
 
-        // as2301_read();
-		gpio_set_level(GPIO_NUM_5, 0);
+		// 发送起始信号
+		// 输出拉低 1ms
+		gpio_set_level(AM2301_CTRL_PIN, 0);
 		os_delay_us(1000);
-		gpio_set_level(GPIO_NUM_5, 1);
-		os_delay_us(10);
-		gpio_set_input_mode();
-		// os_delay_us(160);
+		// 输出拉高，立刻转为输入模式
+		gpio_set_level(AM2301_CTRL_PIN, 1);
+		gpio_set_direction(AM2301_CTRL_PIN, GPIO_MODE_INPUT);
 
-		// last_bit = gpio_get_level(GPIO_NUM_5);
-		for(i = 0; i < 5000; ++i)
+		// 监听输入信号，等待 AM2301 应答低电平 80us
+		// 此时输入应该为高
+		while(1 == gpio_get_level(AM2301_CTRL_PIN) && retry < 1000)
 		{
-			t[i] = gpio_get_level(GPIO_NUM_5);
-			// if(last_bit != bit)
-			// {
-			// 	retry[pos++] = bit;
-			// 	last_bit = bit;
-			// }
-		}
-		// for(i = 0; i < 120; ++i)
-		// {
-		// 	printf("%d", retry[i]);
-		// }
-		for(i = 0; i < 5000; ++i)
-		{
-			printf("%d", t[i]);
-		}
-		printf("\n");
-
-		gpio_set_output_mode();
-
-		continue;
-
-		// 等待低电平
-		while(gpio_get_level(GPIO_NUM_5))
-		{
+			++retry;
 			os_delay_us(1);
 		}
-		for(i = 0; i < 40; ++i)
+		// 如果应答低电平超过 1000us，错误，放弃本次读取
+		if(1000 == retry)
 		{
-			// data += am2301_get_bit();
-			// bit = 0;
-			// bit = am2301_get_bit();
+			ESP_LOGI(s_tag, "AM2301 ACK Error");
+			gpio_set_direction(AM2301_CTRL_PIN, GPIO_MODE_OUTPUT);
+			gpio_set_level(AM2301_CTRL_PIN, 1);
+			continue;
+		}
 
-			// atry[i] = 0;
-			// btry[i] = 0;
+		// 接收到答低电平 80us，之后还有高电平 80us
+		// 监听等其变成高电平
+		retry = 0;
+		while(0 == gpio_get_level(AM2301_CTRL_PIN) && retry < 1000)
+		{
+			++retry;
+			os_delay_us(1);
+		}
+		// 如果应答低电平超过 1000us，错误，放弃本次读取
+		if(1000 == retry)
+		{
+			ESP_LOGI(s_tag, "AM2301 ACK Error 2");
+			gpio_set_direction(AM2301_CTRL_PIN, GPIO_MODE_OUTPUT);
+			gpio_set_level(AM2301_CTRL_PIN, 1);
+			continue;
+		}
 
-			// 等待高电平
-			while(!gpio_get_level(GPIO_NUM_5) && atry[i] < 1000)
+		for(i = 0; i < 5; ++i)
+		{
+			for(j = 0; j < 8; ++j)
 			{
-				++atry[i];
-				os_delay_us(1);
+				recv_byte[i] <<= 1;
+				recv_byte[i] |= am2301_read_bit();
 			}
-			// 等待低电平
-			while(gpio_get_level(GPIO_NUM_5) && btry[i] < 1000)
-			{
-				++btry[i];
-				os_delay_us(1);
-			}
-			// os_delay_us(40);	// 等待 40us
-			// if(gpio_get_level(GPIO_NUM_5))
-			// {
-			// 	// bit = 1;
-			// 	data += 1;
-			// }
+		}
 
-			// // printf("%d - %d, %d\n", bit, atry, btry);
-			// // data += bit;
-			// data <<= 1;
-		}
-		// ESP_LOGI(s_tag, "%lld", data);
-		data = 0x11001100;
-		printf("%lld\n", data);
-		for(i = 0; i < 40; ++i)
-		{
-			// ESP_LOGI(s_tag, "%d ", atry[i]);
-			printf("%03d ", atry[i]);
-		}
-		printf("\n");
-		for(i = 0; i < 40; ++i)
-		{
-			// ESP_LOGI(s_tag, "%d", btry[i]);
-			printf("%03d ", btry[i]);
-		}
-		printf("\n");
+		// 等待结束信号拉低
+		while(0 == gpio_get_level(AM2301_CTRL_PIN));
 
-		gpio_set_output_mode();
-		// vTaskDelay(5 / portTICK_RATE_MS);
-		// gpio_set_level(GPIO_NUM_5, 1);
-		// vTaskDelay(1 / portTICK_RATE_MS);
-		// vTaskSuspend
+		gpio_set_direction(AM2301_CTRL_PIN, GPIO_MODE_OUTPUT);
+		gpio_set_level(AM2301_CTRL_PIN, 1);
+
+		if(recv_byte[4] != (uint8_t)(recv_byte[0] + recv_byte[1] + recv_byte[2] + recv_byte[3]))
+		{
+			ESP_LOGI(s_tag, "Receive Data CRC Error");
+			continue;
+		}
+
+		hum = (recv_byte[0] << 8) | recv_byte[1];
+		if(0 != (recv_byte[2] & 0x80))
+		{
+			minus_temp_flag = '-';
+			recv_byte[2] &= 0x7F;
+		}
+		temp = (recv_byte[2] << 8) | recv_byte[3];
+		ESP_LOGI(s_tag, "%d.%d %%RH, %c%d.%d Centigrade", hum / 10, hum % 10,
+														  minus_temp_flag,
+														  temp / 10, temp % 10);
 	}
 }
