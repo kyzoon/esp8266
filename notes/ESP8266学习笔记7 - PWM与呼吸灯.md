@@ -2,7 +2,7 @@
 作者：Preston_zhu<br>
 日期：2020.6.21
 
-### 1. PWM 实例
+### 1. 呼吸灯实例
 
 参考 RTOS_SDK/examples/peripherals/pwm
 
