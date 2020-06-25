@@ -123,7 +123,7 @@ IIC 协议规定总线上的数据传输必需以一个起始信号作为开始�
 
 static const char *TAG = "main";
 
-#define IIC_PORT_2_MPU6050          IIC_NUM_0        /*!< 主机设备 IIC 端口号 */
+#define IIC_PORT_2_MPU6050          IIC_NUM_0        /*!< 主机设备 IIC 接口号 */
 
 #define MPU6050_SENSOR_ADDR         0x68             /*!< 从机 MPU6050 地址 */
 #define MPU6050_CMD_START           0x41             /*!< 设置 MPU6050 测量模式指令 */
@@ -201,7 +201,7 @@ static esp_err_t mpu6050_write(i2c_port_t i2c_num, uint8_t reg_address,
 	i2c_master_write_byte(cmd, reg_address, ACK_CHECK_EN);
 	// 装载写至从机寄存器的数据，ACK应答使能
 	i2c_master_write(cmd, data, data_len, ACK_CHECK_EN);
-	// 装载停止信号
+	// 装载结束信号
 	i2c_master_stop(cmd);
 
 	// 发送命令队列中的数据
@@ -230,7 +230,7 @@ static esp_err_t mpu6050_read(i2c_port_t i2c_num, uint8_t reg_address,
 	i2c_master_write_byte(cmd, MPU6050_SENSOR_ADDR << 1 | WRITE_BIT, ACK_CHECK_EN);
 	// 装载从机寄存器地址，即待读取数据的寄存器地址，ACK应答使能
 	i2c_master_write_byte(cmd, reg_address, ACK_CHECK_EN);
-	// 装载停止信号
+	// 装载结束信号
 	i2c_master_stop(cmd);
 	// 发送命令队列中的数据
 	ret = i2c_master_cmd_begin(i2c_num, cmd, 1000 / portTICK_RATE_MS);
@@ -252,7 +252,7 @@ static esp_err_t mpu6050_read(i2c_port_t i2c_num, uint8_t reg_address,
 	// 装载读取命令，待读取数据缓存区和数据长度，用于从 IIC 总线读取数据，
 	// 最后一个数据应答 NACK
 	i2c_master_read(cmd, data, data_len, LAST_NACK_VAL);
-	// 装载停止信号
+	// 装载结束信号
 	i2c_master_stop(cmd);
 	// 发送命令队列中的数据
 	// ** 这里不好理解 **
@@ -396,17 +396,17 @@ IIC 驱动将每次读写操作，都封装成一个指令队列。用户需要�
 #### ii.函数概览：
 
 ```C
-esp_err_t i2c_driver_install(i2c_port_t i2c_num, i2c_mode_t mode);
-esp_err_t i2c_driver_delete(i2c_port_t i2c_num);
-esp_err_t i2c_param_config(i2c_port_t i2c_num, const i2c_config_t *i2c_conf);
+esp_err_t i2c_driver_install(i2c_port_t i2c_num, i2c_mode_t mode)
+esp_err_t i2c_driver_delete(i2c_port_t i2c_num)
+esp_err_t i2c_param_config(i2c_port_t i2c_num, const i2c_config_t *i2c_conf)
 esp_err_t i2c_set_pin(i2c_port_t i2c_num,
 					  int sda_io_num,
 					  int scl_io_num,
 					  gpio_pullup_t sda_pullup_en,
 					  gpio_pullup_t scl_pullup_en,
-					  i2c_mode_t mode);
-i2c_cmd_handle_t i2c_cmd_link_create(void);
-void i2c_cmd_link_delete(i2c_cmd_handle_t cmd_handle);
+					  i2c_mode_t mode)
+i2c_cmd_handle_t i2c_cmd_link_create(void)
+void i2c_cmd_link_delete(i2c_cmd_handle_t cmd_handle)
 esp_err_t i2c_master_start(i2c_cmd_handle_t cmd_handle)
 esp_err_t i2c_master_write_byte(i2c_cmd_handle_t cmd_handle,
 							    uint8_t data,
@@ -477,9 +477,14 @@ IIC 参数初始化
 * `i2c_conf` - 指针，IIC 设置参数结构体
 
 ```C
-esp_err_t i2c_set_pin(i2c_port_t i2c_num, int sda_io_num, int scl_io_num, gpio_pullup_t sda_pullup_en, gpio_pullup_t scl_pullup_en, i2c_mode_t mode)
+esp_err_t i2c_set_pin(i2c_port_t i2c_num,
+					  int sda_io_num,
+					  int scl_io_num,
+					  gpio_pullup_t sda_pullup_en,
+					  gpio_pullup_t scl_pullup_en,
+					  i2c_mode_t mode)
 ```
-Configure GPIO signal for IIC sck and sda.
+配置 IIC SDA 和 SCL GPIO 引脚
 
 返回值：
 
@@ -488,12 +493,12 @@ Configure GPIO signal for IIC sck and sda.
 
 参数：
 
-* i2c_num: IIC port number
-* sda_io_num: GPIO number for IIC sda signal
-* scl_io_num: GPIO number for IIC scl signal
-* sda_pullup_en: Whether to enable the internal pullup for sda pin
-* scl_pullup_en: Whether to enable the internal pullup for scl pin
-* mode: IIC mode
+* `i2c_num` - IIC 接口号
+* `sda_io_num` - IIC SDA GPIO 引脚号
+* `scl_io_num` - IIC SCL GPIO 引脚号
+* `sda_pullup_en` - 是否使能 SDA GPIO 内部上拉电阻
+* `scl_pullup_en` - 是否使能 SCL GPIO 内部上拉电阻
+* `mode` - IIC 工作模式，主机模式或从机模式
 
 ```C
 i2c_cmd_handle_t i2c_cmd_link_create(void)
@@ -535,7 +540,8 @@ esp_err_t i2c_master_start(i2c_cmd_handle_t cmd_handle)
 * `cmd_handle` - IIC 命令连接句柄
 
 ```C
-esp_err_t i2c_master_write_byte(i2c_cmd_handle_t cmd_handle, uint8_t data, bool ack_en)
+esp_err_t i2c_master_write_byte(i2c_cmd_handle_t cmd_handle,
+								uint8_t data, bool ack_en)
 ```
 装载 1 个待发送到 IIC 总线的数据，到 IIC 主机的命令队列
 注意：仅能在主机模式下调用此函数。之后调用 `i2c_master_cmd_begin()` 函数发送整个命令队列内容
@@ -552,7 +558,10 @@ esp_err_t i2c_master_write_byte(i2c_cmd_handle_t cmd_handle, uint8_t data, bool 
 * `ack_en` - 是否使能主机处理从机 ACK 应答
 
 ```C
-esp_err_t i2c_master_write(i2c_cmd_handle_t cmd_handle, uint8_t *data, size_t data_len, bool ack_en)
+esp_err_t i2c_master_write(i2c_cmd_handle_t cmd_handle,
+						   uint8_t *data,
+						   size_t data_len,
+						   bool ack_en)
 ```
 装载待发送到 IIC 总线的数据，到 IIC 主机的命令队列
 注意：仅能在主机模式下调用此函数。之后调用 `i2c_master_cmd_begin()` 函数发送整个命令队列内容
@@ -570,10 +579,12 @@ esp_err_t i2c_master_write(i2c_cmd_handle_t cmd_handle, uint8_t *data, size_t da
 * `ack_en` - 是否使能主机处理从机 ACK 应答
 
 ```C
-esp_err_t i2c_master_read_byte(i2c_cmd_handle_t cmd_handle, uint8_t *data, i2c_ack_type_t ack)
+esp_err_t i2c_master_read_byte(i2c_cmd_handle_t cmd_handle,
+							   uint8_t *data,
+							   i2c_ack_type_t ack)
 ```
-Queue command for IIC master to read one byte from IIC bus.
-Note Only call this function in IIC master mode Call i2c_master_cmd_begin() to send all queued commands
+IIC 主机命令队列，从 IIC 总线读取 1 字节数据
+注意：仅能在主机模式下调用此函数。之后调用 `i2c_master_cmd_begin()` 函数发送整个命令队列内容
 
 返回值：
 
@@ -583,8 +594,8 @@ Note Only call this function in IIC master mode Call i2c_master_cmd_begin() to s
 参数：
 
 * `cmd_handle` - IIC 命令连接句柄
-* data: pointer accept the data byte
-* ack: ack value for read command
+* `data` - 数据缓存区，用于存储从 IIC 总线接收到的数据
+* `ack` - 读取命令的 ACK 值
 
 ```C
 esp_err_t i2c_master_read(i2c_cmd_handle_t cmd_handle,
@@ -610,7 +621,7 @@ IIC 主机的命令队列，从 IIC 总线读取数据
 ```C
 esp_err_t i2c_master_stop(i2c_cmd_handle_t cmd_handle)
 ```
-装载一个停止信号到 IIC 主机的命令队列
+装载一个结束信号到 IIC 主机的命令队列
 注意：仅能在主机模式下调用此函数。之后调用 `i2c_master_cmd_begin()` 函数发送整个命令队列内容
 
 返回值：
@@ -650,20 +661,14 @@ IIC API 都是非线程安全类函数，如果需要在不同的任务中使用
 结构体
 ```C
 struct i2c_config_t
-	IIC initialization parameters.
+	// IIC 初始化参数结构体
 	Public Members
-	i2c_mode_t mode
-	IIC mode
-	gpio_num_t sda_io_num
-	GPIO number for IIC sda signal
-	gpio_pullup_t sda_pullup_en
-	Internal GPIO pull mode for IIC sda signal
-	gpio_num_t scl_io_num
-	GPIO number for IIC scl signal
-	gpio_pullup_t scl_pullup_en
-	Internal GPIO pull mode for IIC scl signal
-	uint32_t clk_stretch_tick
-	Clock Stretch time, depending on CPU frequency
+	i2c_mode_t mode					// IIC 工作模式，主机模式或从机模式
+	gpio_num_t sda_io_num			// IIC SDA GPIO 引脚号
+	gpio_pullup_t sda_pullup_en		// IIC SDA GPIO 内部上拉电阻是否使能
+	gpio_num_t scl_io_num			// IIC SCL GPIO 引脚号
+	gpio_pullup_t scl_pullup_en		// IIC SCL GPIO 内部上拉电阻是否使能
+	uint32_t clk_stretch_tick		// 时钟拉伸节拍，依赖于 CPU 工作频率
 ```
 
 类型定义
@@ -690,12 +695,12 @@ enum i2c_opmode_t
 	IIC_CMD_RESTART = 0			// IIC 重新起始指令
 	IIC_CMD_WRITE				// IIC 写指令
 	IIC_CMD_READ				// IIC 读指令
-	IIC_CMD_STOP				// IIC 停止指令
+	IIC_CMD_STOP				// IIC 结束指令
 ```
 
 ```C
 enum i2c_port_t
-	IIC_NUM_0 = 0           	// IIC 端口 0
+	IIC_NUM_0 = 0           	// IIC 接口 0
 	IIC_NUM_MAX
 ```
 
@@ -706,53 +711,3 @@ enum i2c_ack_type_t
 	IIC_MASTER_LAST_NACK = 0x2	// IIC 读取末尾字节数据不应答 NACK
 	IIC_MASTER_ACK_MAX
 ```
-
-### 4. 相位计算
-
-周期T：period，单位：s
-
-频率f：frequency = 1 / 周期
-
-相位：Phase = 2&pound;f
-
-相位范围应当为：(-180, 180)
-
-相位差：针对同频率波形而言
-
-简单的理解，就是两个波形（周期性）相对应部分的时间差，例如起始位置的时间差
-
-实例中，设置了相位差分别为：0，0，50，-50，则对应计算 4 个通道输出波形时间差为：
-* 通道 0：时间差 = 0s
-* 通道 1：时间差 = 0s
-* 通道 2：时间差 = 50 / 180 x 500us = 138us
-* 通道 3：时间差 = 250us - 50 / 180 x 500us = 112us
-
-这里有个疑问：
-
-相位计算取的半个周期： 50 度 / 180 度，然后使用了一个周期的时间 500us，计算的值与实际的值一致。为什么不是用半个周期的时间 250us 呢？
-猜想：应该是因为此方波没有负半轴的波形，相位只有 180 度
-
-### 5. 其它实例测试
-#### i. 特殊相位差实例
-
-相位参数为 (0, 0, 90, -90) 
-![pwm4](images/pwm4.png)
-从图可知：
-通道 2 波形与通道 3 和 4 均差半个波形，因为相位相差 90 度
-通道 3 与 4 则波形相同，因为相位相关 180 度
-
-#### ii. 不同占空比实例
-
-占空比参数为 (100, 200, 300, 400)
-![pwm5](images/pwm5.png)
-
-#### iii. 下图为实例输出五个通道
-
-具体参数为：
-* GPIO：12/13/14/15/16  
-* 占空比：(250, 250, 250, 250, 250)
-* 相位：(0, 0, 0, 0, 0)
-![pwm6](images/pwm6.png)
-成功验证了多于 4 个 PWM 通道输出
-
-
