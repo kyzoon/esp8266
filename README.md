@@ -22,7 +22,21 @@
 $ source chenv.sh
 ```
 
-### 3. 笔记清单
+### 3. 编译与调式说明
+
+```shell
+# 进入项目目录下
+$ make flash monitor
+# 也可单独命令执行
+# 编译
+$ make
+# 烧录
+$ make flash
+# 调试运行
+$ make monitor
+```
+
+### 4. 笔记清单
 * ESP8266学习笔记1 - ubuntu环境搭建
 * ESP8266学习笔记2 - hello_world实例
 * ESP8266学习笔记3 - 项目模板
