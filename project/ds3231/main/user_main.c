@@ -1,15 +1,15 @@
 /**
  * 说明:
  * 本实例展示如何使用 IIC
- * 使用 IIC 控制 MPU6050 六轴传感器
+ * 使用 IIC 控制 DS3231 RTC 模块
  *
  * GPIO 配置状态:
- * GPIO14 作为主机 SDA 连接至 MPU6050 SDA
- * GPIO2  作为主机 SCL 连接到 MPU6050 SCL
+ * GPIO14 作为主机 SDA 连接至 DS3231 SDA
+ * GPIO2  作为主机 SCL 连接到 DS3231 SCL
  * 不必要增加外部上拉电阻，驱动程序将使能内部上拉电阻
  *
  * 测试:
- * 如果连接上传感器，则读取数据
+ * 如果连接上 DS3231，则读取数据
  */
 #include <stdio.h>
 #include <string.h>
@@ -31,7 +31,7 @@ static const char *TAG = "DS3231";
 
 #define I2C_PORT_2_DS3231			I2C_NUM_0        /*!< 主机设备 IIC 端口号 */
 
-#define DS3231_ADDR					0x68             /*!< 从机 MPU6050 地址 */
+#define DS3231_ADDR					0x68             /*!< 从机 DS3231 地址 */
 #define WRITE_BIT                   I2C_MASTER_WRITE /*!< I2C 主机写操作位 */
 #define READ_BIT                    I2C_MASTER_READ  /*!< I2C 主机读操作位 */
 #define ACK_CHECK_EN                0x1              /*!< I2C 主机确认接收从机 ACK 信号 */
@@ -41,7 +41,7 @@ static const char *TAG = "DS3231";
 #define LAST_NACK_VAL               0x2              /*!< I2C 末尾ACK值 */
 
 /**
- * MPU6050 寄存器地址
+ * DS3231 寄存器地址
  */
 #define REG_SEC					0x00
 #define REG_MIN					0x01
@@ -169,9 +169,9 @@ static esp_err_t ds3231_read(i2c_port_t i2c_num, uint8_t reg_address,
 	return ret;
 }
 
-static void ds3231_set_datetime(uint8_t sec, uint8_t min, uint8_t hour,
+static void ds3231_set_datetime(uint8_t year, uint8_t mon, uint8_t day,
 								uint8_t weekday,
-								uint8_t day, uint8_t mon, uint8_t year)
+								uint8_t hour, uint8_t min, uint8_t sec)
 {
 	uint8_t datetime[7];
 
@@ -187,7 +187,9 @@ static void ds3231_set_datetime(uint8_t sec, uint8_t min, uint8_t hour,
 	ESP_ERROR_CHECK(ds3231_write(I2C_PORT_2_DS3231, REG_SEC, datetime, 7));
 }
 
-static void ds3231_set_alarm1(uint8_t day, uint8_t hour, uint8_t min, uint8_t sec, uint8_t is_by_day)
+/* is_by_weekday: 0 - 每月这天; 1 - 每周这天 */
+/* 闹钟触发条件：日/星期，时，分，均匹配时触发 */
+static void ds3231_set_alarm1(uint8_t day, uint8_t hour, uint8_t min, uint8_t sec, uint8_t is_by_weekday)
 {
 	uint8_t datetime[4];
 
@@ -196,7 +198,7 @@ static void ds3231_set_alarm1(uint8_t day, uint8_t hour, uint8_t min, uint8_t se
 	datetime[2] = ((hour / 10) << 4) | (hour % 10);
 	datetime[3] = ((day / 10) << 4) | (day % 10);
 
-	if(1 == is_by_day)
+	if(1 == is_by_weekday)
 	{
 		datetime[3] |= 0x40;
 	}
@@ -205,7 +207,9 @@ static void ds3231_set_alarm1(uint8_t day, uint8_t hour, uint8_t min, uint8_t se
 	ESP_ERROR_CHECK(ds3231_write(I2C_PORT_2_DS3231, REG_A1_SEC, datetime, 4));
 }
 
-static void ds3231_set_alarm2(uint8_t day, uint8_t hour, uint8_t min, uint8_t is_by_day)
+/* is_by_weekday: 0 - 每月这天; 1 - 每周这天 */
+/* 闹钟触发条件：日/星期，时，分，均匹配时触发 */
+static void ds3231_set_alarm2(uint8_t day, uint8_t hour, uint8_t min, uint8_t is_by_weekday)
 {
 	uint8_t datetime[3];
 
@@ -213,7 +217,7 @@ static void ds3231_set_alarm2(uint8_t day, uint8_t hour, uint8_t min, uint8_t is
 	datetime[1] = ((hour / 10) << 4) | (hour % 10);
 	datetime[2] = ((day / 10) << 4) | (day % 10);
 
-	if(1 == is_by_day)
+	if(1 == is_by_weekday)
 	{
 		datetime[2] |= 0x40;
 	}
@@ -231,6 +235,9 @@ static esp_err_t ds3231_init(i2c_port_t i2c_num)
 
 	i2c_module_init();	// 初始化 IIC 接口
 
+	// 开机时设置当前日期时间
+	// ds3231_set_datetime(20, 6, 30, 2, 15, 21, 0);
+
 	// 配置 DS3231，RS: 8kHz, 中断使能，闹钟 1 和 2 中断使能
 	cmd_data = 0x1F;
 	ESP_ERROR_CHECK(ds3231_write(I2C_PORT_2_DS3231, REG_CTRL, &cmd_data, 1));
@@ -238,8 +245,9 @@ static esp_err_t ds3231_init(i2c_port_t i2c_num)
 	cmd_data = 0x88;
 	ESP_ERROR_CHECK(ds3231_write(I2C_PORT_2_DS3231, REG_CTRL_STATUS, &cmd_data, 1));
 
-	ds3231_set_alarm1(4, 22, 54, 05, 1);
-	ds3231_set_alarm2(4, 22, 54, 1);
+	// 设置闹钟
+	ds3231_set_alarm1(2, 15, 48, 05, 1);
+	// ds3231_set_alarm2(4, 22, 54, 1);
 
 	return ESP_OK;
 }
@@ -250,13 +258,14 @@ static void i2c_task_example(void *arg)
 	static uint32_t error_count = 0;
 	int temp = 0;
 	int temp_flag = ' ';
+	float temp_val = 0;
 	int ret = 0;
 	int need_clean_alarm_flag = 0;
 
-	// 初始化 MPU6050
+	// 初始化 DS3231
 	ds3231_init(I2C_PORT_2_DS3231);
 
-	while(1)
+	for(;;)
 	{
 		memset(datetime_data, 0, 19);
 		// 读取 DS3231 日期时间数据
@@ -300,9 +309,14 @@ static void i2c_task_example(void *arg)
 			{
 				temp_flag = '-';
 				temp &= 0x7FFF;
+				// 计算温度 2 的补码格式编码
+				temp -= 0x40;
+				temp ^= 0x7FC0;
 			}
 			temp >>= 6;
-			ESP_LOGI(TAG, "Temp     :%c%d", temp_flag, temp);
+			temp_val = temp * 0.25;
+			
+			ESP_LOGI(TAG, "Temp     :%c%d.%02d", temp_flag, (int)temp_val, ((int)(temp_val * 100) % 100));
 
 			ESP_LOGI(TAG, "error_count: %d\n", error_count);
 
@@ -316,7 +330,7 @@ static void i2c_task_example(void *arg)
 			ESP_LOGE(TAG, "No ack, sensor not connected...skip...\n");
 		}
 
-		vTaskDelay(3000 / portTICK_RATE_MS);
+		vTaskDelay(1000 / portTICK_RATE_MS);
 	}
 
 	i2c_driver_delete(I2C_PORT_2_DS3231);
