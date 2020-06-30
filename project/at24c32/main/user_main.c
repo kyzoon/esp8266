@@ -232,11 +232,12 @@ static void i2c_task_example(void *arg)
 	for(;;)
 	{
 		// 写入并读取一个字节
+		// ESP_LOGI(TAG, "Write 1 byte data");
 		// e2p_byte = 0;
-		// ESP_ERROR_CHECK(at24c32_write_byte(I2C_PORT_2_AT24C32, 0x00, temp));
+		// ESP_ERROR_CHECK(at24c32_write_in_page(I2C_PORT_2_AT24C32, 0x00, &temp, 1));
 		// // 写之后立即读，需要增加延时，否则读取失败
 		// vTaskDelay(20 / portTICK_RATE_MS);
-		// at24c32_read_byte(I2C_PORT_2_AT24C32, 0x00, &e2p_byte);
+		// at24c32_read(I2C_PORT_2_AT24C32, 0x00, &e2p_byte, 1);
 		// ESP_LOGI(TAG, "Read E2PROM data at [0]: %X", e2p_byte);
 		// ++temp;
 
